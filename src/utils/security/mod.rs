@@ -51,7 +51,7 @@ pub fn decrypt_file<P: AsRef<Path>>(file_path: P, key: &[u8]) -> Result<(), Cryp
     println!("cipher_text: {:?}", cipher_text);
     let derived_key = derive_key(key);
     println!("{:?}",derived_key);
-    let cipher = Aes256Gcm::new(GenericArray::from_slice(&derived_key));;
+    let cipher = Aes256Gcm::new(GenericArray::from_slice(&derived_key));
     let nonce = GenericArray::from_slice(b"unique nonce"); // Must be the same nonce used for encryption
     println!("{:?}", nonce);
     let plaintext = cipher
