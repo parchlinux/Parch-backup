@@ -13,7 +13,13 @@ pub fn list_installed_apps() -> io::Result<PathBuf> {
         .output()?;
 
     if output.status.success() {
-        let installed_apps = String::from_utf8_lossy(&output.stdout).to_string();
+        // Process the output to remove versions
+        let installed_apps = String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .map(|line| line.split_whitespace().next().unwrap_or(""))
+            .collect::<Vec<_>>()
+            .join("\n");
+
         let apps_list_path = PathBuf::from(APPS_LIST_FILE);
         let mut file = File::create(&apps_list_path)?;
         file.write_all(installed_apps.as_bytes())?;

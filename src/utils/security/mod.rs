@@ -46,18 +46,13 @@ pub fn encrypt_file<P: AsRef<Path>>(file_path: P, key: &[u8]) -> Result<(), Cryp
 }
 
 /// Decrypts a file using AES-GCM.
-pub fn decrypt_file<P: AsRef<Path>>(file_path: P, key: &[u8]) -> Result<(), CryptoError> {
-    let cipher_text = fs::read(file_path.as_ref()).map_err(CryptoError::FileRead)?;
-    println!("cipher_text: {:?}", cipher_text);
+pub fn decrypt_file<P: AsRef<Path>>(file_path: P, key: &[u8]) -> Result<Vec<u8>, CryptoError> {
+    let data = fs::read(file_path.as_ref()).map_err(CryptoError::FileRead)?;
     let derived_key = derive_key(key);
-    println!("{:?}",derived_key);
     let cipher = Aes256Gcm::new(GenericArray::from_slice(&derived_key));
-    let nonce = GenericArray::from_slice(b"unique nonce"); // Must be the same nonce used for encryption
-    println!("{:?}", nonce);
+    let nonce = GenericArray::from_slice(b"unique nonce");
     let plaintext = cipher
-        .decrypt(nonce, Payload { msg: &cipher_text, aad: b"" })
+        .decrypt(nonce, Payload { msg: &data, aad: b"" })
         .map_err(|_| CryptoError::Decryption)?;
-
-    fs::write(file_path.as_ref(), &plaintext).map_err(CryptoError::FileWrite)?;
-    Ok(())
+    Ok(plaintext)
 }

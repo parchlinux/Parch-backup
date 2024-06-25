@@ -24,11 +24,12 @@ fn main() {
                 std::process::exit(1);
             }
         }
-        Commands::Schedule(args) => {
-            // Handle schedule functionality
-            println!("Schedule called with cron: {}", args.cron);
-            // Call the appropriate function from the system module
-            // system::schedule_backup(args.cron);
-        }
+        // Commands::Schedule(args) => {
+        //     let result = system::schedule::schedule_backup(&args);
+        //     if let Err(e) = result {
+        //         eprintln!("Error: {}", e);
+        //         std::process::exit(1);
+        //     }
+        // }
     }
 }

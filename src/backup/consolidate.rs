@@ -1,15 +1,15 @@
+use chrono::Utc;
+
 use crate::cli::BackupArgs;
+use crate::utils::compression::create_tar_gz_archive;
 use crate::utils::security::{self, CryptoError};
-use chrono::Local;
-use std::fs::{self, File};
-use std::io;
+use std::{fs, io};
 use std::path::{Path, PathBuf};
-use tar::Builder;
 
 /// Consolidates individual backups into a single archive file.
 pub fn consolidate_backups(backup_files: &[(&str, PathBuf)], args: &BackupArgs) -> io::Result<()> {
     // Prepare timestamp and components for archive name
-    let timestamp = Local::now().format("%Y-%m-%d-%H:%M:%S");
+    let timestamp = Utc::now().format("%Y-%m-%d-%H:%M:%S");
     let components = {
         let mut components = String::new();
         if args.apps {
@@ -31,35 +31,49 @@ pub fn consolidate_backups(backup_files: &[(&str, PathBuf)], args: &BackupArgs) 
     };
 
     // Construct archive name
-    let archive_name = format!("backup-{}-{}.{}", timestamp, components, crate::utils::compression::TAR_GZ);
+    let archive_name = format!(
+        "backup-{}-{}.{}",
+        timestamp,
+        components,
+        crate::utils::compression::ARCHIVE_EXT
+    );
 
-    // Create the archive file
-    let archive_file = File::create(&archive_name)?;
-    let enc = flate2::write::GzEncoder::new(archive_file, flate2::Compression::default());
-    let mut tar = Builder::new(enc);
+    // Determine the full archive path
+    let archive_path = if let Some(ref path) = args.archive_path {
+        Path::new(path).join(&archive_name)
+    } else {
+        Path::new(&archive_name).to_path_buf()
+    };
 
-    // Add each backup file to the archive and remove original files
-    for (subdir, file) in backup_files {
-        let path_in_archive = Path::new(subdir).join(file.file_name().unwrap());
-        tar.append_path_with_name(file, path_in_archive)?;
-        fs::remove_file(file)?;
+    // Create directory if it doesn't exist
+    if let Some(parent_dir) = archive_path.parent() {
+        if !parent_dir.exists() {
+            fs::create_dir_all(parent_dir)?;
+            println!("Created directory: {}", parent_dir.display());
+        }
     }
 
-    // Finalize the archive
-    tar.finish()?;
+    // Convert &str elements in backup_files to String
+    let backup_files: Vec<(String, PathBuf)> = backup_files
+        .iter()
+        .map(|(subdir, path)| (subdir.to_string(), path.clone()))
+        .collect();
+
+    // Create the archive
+    create_tar_gz_archive(archive_path.to_str().unwrap(), &backup_files)?;
 
     // Encrypt the consolidated backup file if encryption is enabled
     if let Some(key) = &args.encrypt_key {
-        if let Err(e) = security::encrypt_file(Path::new(&archive_name), key.as_bytes()) {
+        if let Err(e) = security::encrypt_file(&archive_path, key.as_bytes()) {
             match e {
                 CryptoError::FileRead(_) => eprintln!("Failed to read the archive file: {:?}", e),
-                CryptoError::FileWrite(_) => {
-                    eprintln!("Failed to write the encrypted file: {:?}", e)
-                }
-                _ => {}
+                CryptoError::FileWrite(_) => eprintln!("Failed to write the encrypted file: {:?}", e),
+                _ => {},
             }
         }
     }
+
+    println!("Archive located at: {}", archive_path.display());
 
     Ok(())
 }
