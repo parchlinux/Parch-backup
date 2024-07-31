@@ -1,7 +1,7 @@
 # Maintainer: ParchLinux
 
 pkgname=parch-backup
-pkgver=1.0.0
+pkgver=1.0.1
 pkgrel=1
 pkgdesc="parch backup cli"
 arch=('x86_64')
