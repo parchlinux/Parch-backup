@@ -1,0 +1,24 @@
+# Maintainer: ParchLinux
+
+pkgname=parch-backup
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="parch backup cli"
+arch=('x86_64')
+url="https://github.com/parchlinux/parch-backup"
+license=('GPL-3')
+depends=('gcc-libs')
+makedepends=('git' 'rust')
+source=("$pkgname::git+$url#branch=main")
+md5sums=('SKIP')
+
+build() {
+  cd "$srcdir/$pkgname"
+  cargo build --release
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  # install binary
+  install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+}
