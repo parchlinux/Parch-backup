@@ -27,7 +27,7 @@ pub enum Commands {
 #[derive(Args)]
 pub struct BackupArgs {
     /// Backup archive location
-    #[arg(long, help = "Backup archive location", default_value = "/home/backup")]
+    #[arg(long, help = "Backup archive location", default_value = "~/Backups")]
     pub archive_path: Option<String>,
     /// Backup installed apps names
     #[arg(long, help = "Backup installed apps names")]

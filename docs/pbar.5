@@ -1,0 +1,68 @@
+.TH PBAR 5 "August 2026" "v1.2" "File Formats Manual"
+.SH NAME
+pbar \- Parch Backup Archive container format specification
+.SH DESCRIPTION
+A \fB.pbar\fR file is a custom container format engineered specifically for Arch-based Linux distributions (with primary integration for Parch Linux).
+
+It encapsulates cryptographic headers, Argon2id KDF salt, random AEAD initialization nonces, an optional Ed25519 digital signature block, an encrypted/plaintext JSON manifest index, and a streaming chunked AEAD payload holding a POSIX \fBtar\fR archive compressed with \fBzstd\fR or \fBgzip\fR.
+
+.SH BINARY LAYOUT
+All multi-byte numeric fields are stored in \fBBig-Endian\fR byte order:
+
+.TP
+.B 0x00 .. 0x03 (4 Bytes)
+Magic Bytes: ASCII \fB"PBAR"\fR (\fB0x50 0x42 0x41 0x52\fR).
+.TP
+.B 0x04 .. 0x05 (2 Bytes)
+Format Version: u16 (\fB0x0001\fR for v1.2 specification).
+.TP
+.B 0x06 .. 0x07 (2 Bytes)
+Feature Flags: Bitfield u16 (Bit 0: Encrypted, Bit 1: Compressed, Bit 4: AES-256-GCM, Bit 6: Encrypted Manifest, Bit 8: Signed).
+.TP
+.B 0x08 .. 0x17 (16 Bytes)
+KDF Salt: 16 Bytes random salt for Argon2id key derivation.
+.TP
+.B 0x18 .. 0x23 (12 Bytes)
+AEAD Base Nonce: 12 Bytes random base IV.
+.TP
+.B 0x24 .. 0x27 (4 Bytes)
+Manifest Size: u32 big-endian length of JSON Manifest payload.
+.TP
+.B 0x28 .. Variable
+Optional Ed25519 Signature Block (97 Bytes) if Bit 8 is set.
+.TP
+.B Variable
+JSON Manifest Index (Metadata containing distro release, kernel, archive counts, and system info).
+.TP
+.B Remaining Stream
+Stream of 64KB Chunked AEAD Encrypted Data Blocks (\fB[Chunk Length: 4B] [Ciphertext: up to 64KB] [Tag: 16B]\fR).
+
+.SH STREAMING ENCRYPTION MODEL
+To prevent Out-Of-Memory (OOM) failures when operating on large home directory trees, \fB.pbar\fR employs chunked streaming AEAD encryption:
+.IP 1.
+32-byte key derived from passphrase via Argon2id.
+.IP 2.
+For chunk \fBi\fR: \fBDerived_Nonce_i = Base_Nonce XOR BigEndian(i)\fR.
+.IP 3.
+Associated Data: \fBAD = BigEndian(i) || "PBAR"\fR to prevent chunk swapping or deletion attacks.
+
+.SH INNER TARBALL STRUCTURE
+Inside the decrypted stream lies a POSIX tarball:
+.nf
+archive_payload.tar.gz
+├── manifest.json
+├── appsb/apps.txt              (Explicitly installed pacman/paru package list)
+├── flatpakb/flatpak_apps.txt  (Installed Flatpak app IDs)
+├── homeb/home_backup.tar.gz   (Home dotfiles & user data)
+├── gnupgb/gnupg_backup.tar.gz (~/.gnupg keys)
+└── sshb/ssh_backup.tar.gz     (~/.ssh keys)
+.fi
+
+.SH SEE ALSO
+.BR parch-backup (1),
+.BR tar (1),
+.BR gzip (1),
+.BR zstd (1)
+
+.SH AUTHORS
+Parch Linux Development Team <https://parchlinux.com>

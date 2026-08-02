@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Parch Backup
+Comment=Backup and restore your packages, flatpaks, dotfiles, and security keys
+Exec=parch-backup-gui %f
+Icon=com.parchlinux.backup
+Terminal=false
+Type=Application
+Categories=System;Archiving;Utility;
+Keywords=backup;restore;parch;pacman;flatpak;pbar;
+MimeType=application/x-pbar;
+StartupNotify=true

@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="backupPlate" x1="64" y1="8" x2="64" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00FF95"/>
+      <stop offset="0.5" stop-color="#00A9FF"/>
+      <stop offset="1" stop-color="#0080FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- squircle base plate -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#backupPlate)"/>
+
+  <!-- archive tray -->
+  <rect x="32" y="78" width="64" height="30" rx="10" fill="white"/>
+
+  <!-- inset slot on the tray, for depth without extra color -->
+  <rect x="54" y="90" width="20" height="6" rx="3" fill="#0080FF"/>
+
+  <!-- downward arrow: data flowing into the archive -->
+  <rect x="58" y="24" width="12" height="42" rx="6" fill="white"/>
+  <path d="M42 58 L64 82 L86 58 Z" fill="white"/>
+</svg>

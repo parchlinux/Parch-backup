@@ -1,0 +1,76 @@
+.TH PARCH-BACKUP 1 "August 2026" "v0.1.0" "User Commands"
+.SH NAME
+parch-backup \- Comprehensive backup and restore utility for Parch Linux and Arch-based systems
+.SH SYNOPSIS
+.B parch-backup
+.RB [ backup | restore ]
+[\fIOPTIONS\fR]
+.br
+.B parch-backup-gui
+.SH DESCRIPTION
+.B parch-backup
+is a backup and restore solution designed specifically for Arch-based Linux distributions, with native integration for Parch Linux. It collects system packages (via paru, yay, or pacman), Flatpak applications, user home directory dotfiles, GPG keys, and SSH keys into a high-performance, secure \fB.pbar\fR container file.
+
+The application includes both a Command Line Interface (\fBparch-backup\fR) and a GTK4 / Libadwaita Graphical User Interface (\fBparch-backup-gui\fR) adhering to GNOME Human Interface Guidelines (HIG) with responsive mobile layout support.
+
+.SH COMMANDS
+.TP
+.B backup
+Initiate system backup and generate a \fB.pbar\fR archive.
+.TP
+.B restore
+Extract and restore system state from a \fB.pbar\fR archive.
+
+.SH BACKUP OPTIONS
+.TP
+.BI \-\-archive\-path " PATH"
+Destination directory or file path for the output archive. Defaults to \fB~/Backups\fR.
+.TP
+.B \-\-apps
+Include explicit package list (\fBparu\fR, \fByay\fR, or \fBpacman\fR).
+.TP
+.B \-\-home
+Include user home directory dotfiles and configuration files.
+.TP
+.BI \-\-exclude\-dir " DIRS..."
+Space-separated list of directories relative to home to exclude from backup.
+.TP
+.B \-\-flatpak
+Include list of installed Flatpak application IDs.
+.TP
+.B \-\-keys
+Include GPG (\fB~/.gnupg\fR) and SSH (\fB~/.ssh\fR) security key pairs.
+.TP
+.B \-\-encrypt
+Enable Argon2id key derivation and AES-256-GCM chunked AEAD streaming encryption.
+.TP
+.BI \-\-encrypt\-key " KEY"
+Passphrase used for Argon2id key derivation.
+
+.SH RESTORE OPTIONS
+.TP
+.I ARCHIVE_PATH
+Path to the \fB.pbar\fR archive to restore.
+.TP
+.B \-\-decrypt
+Enable stream decryption for encrypted archives.
+.TP
+.BI \-\-decrypt\-key " KEY"
+Passphrase for decrypting the archive.
+
+.SH EXAMPLES
+.TP
+Perform complete encrypted system backup to ~/Backups:
+.B parch-backup backup --apps --home --flatpak --keys --encrypt --encrypt-key "secret"
+.TP
+Restore from an encrypted .pbar archive:
+.B parch-backup restore ~/Backups/backup-2026-08-02-13-30-00-ahkfe.pbar --decrypt --decrypt-key "secret"
+
+.SH SEE ALSO
+.BR pbar (5),
+.BR pacman (8),
+.BR paru (8),
+.BR flatpak (1)
+
+.SH AUTHORS
+Parch Linux Development Team <https://parchlinux.com>

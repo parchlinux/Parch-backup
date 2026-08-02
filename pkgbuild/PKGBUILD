@@ -1,24 +1,56 @@
-# Maintainer: ParchLinux
+# Maintainer: ParchLinux Developers <https://parchlinux.com>
 
 pkgname=parch-backup
-pkgver=1.0.1
+pkgver=0.1.0
 pkgrel=1
-pkgdesc="parch backup cli"
-arch=('x86_64')
+pkgdesc="Comprehensive backup and restore application for Parch Linux"
+arch=('x86_64' 'aarch64')
 url="https://github.com/parchlinux/parch-backup"
-license=('GPL-3')
-depends=('gcc-libs')
-makedepends=('git' 'rust')
-source=("$pkgname::git+$url#branch=main")
-md5sums=('SKIP')
+license=('GPL-3.0-or-later')
+depends=('gcc-libs' 'gtk4' 'libadwaita')
+optdepends=(
+    'paru: AUR package backup support (recommended)'
+    'yay: Alternative AUR package backup support'
+    'flatpak: Flatpak application backup support'
+)
+makedepends=('cargo' 'git')
+source=("$pkgname::git+$url.git#branch=main")
+sha256sums=('SKIP')
+
+prepare() {
+  cd "$srcdir/$pkgname"
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu" || cargo fetch
+}
 
 build() {
   cd "$srcdir/$pkgname"
-  cargo build --release
+  export RUSTUP_TOOLCHAIN=stable
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release --all-targets || cargo build --release
+}
+
+check() {
+  cd "$srcdir/$pkgname"
+  cargo test --frozen || cargo test
 }
 
 package() {
   cd "$srcdir/$pkgname"
-  # install binary
-  install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/packup"
+
+  # Install Binaries
+  install -Dm755 "target/release/parch-backup" "$pkgdir/usr/bin/parch-backup"
+  install -Dm755 "target/release/parch-backup-gui" "$pkgdir/usr/bin/parch-backup-gui"
+
+  # Install Desktop Launcher
+  install -Dm644 "data/com.parchlinux.backup.desktop" "$pkgdir/usr/share/applications/com.parchlinux.backup.desktop"
+
+  # Install Application Icon
+  install -Dm644 "data/icons/hicolor/scalable/apps/com.parchlinux.backup.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/com.parchlinux.backup.svg"
+
+  # Install MIME Database Info for .pbar
+  install -Dm644 "data/com.parchlinux.backup.xml" "$pkgdir/usr/share/mime/packages/com.parchlinux.backup.xml"
+
+  # Install Man Pages
+  install -Dm644 "docs/parch-backup.1" "$pkgdir/usr/share/man/man1/parch-backup.1"
+  install -Dm644 "docs/pbar.5" "$pkgdir/usr/share/man/man5/pbar.5"
 }
